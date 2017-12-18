@@ -4,10 +4,7 @@ include ../utils/Makefile.help
 include ../utils/Makefile.ca
 # Misc.
 SHELL := /bin/bash
-CA_CERT_DAYS := 3650
-SERVER_DAYS := 365
 CLIENT_CERT_DAYS := 365
-OCSP_DAYS := 365
 OPENSSL_ARGS := -config ./openssl.cnf
 # Files and directories.
 DIRS := certs csr crl newcerts private passwords
@@ -20,9 +17,6 @@ CA_CSR := csr/etcd_csr.pem
 CA_CERT := certs/etcd_cert.pem
 CA_CHAIN := certs/ca_chain_cert.pem
 CRL_FILE := crl/etcd_crl.pem
-# Tools.
-OPENSSL := /usr/bin/openssl
-PWGEN := /usr/bin/pwgen
 # Makefile.
 .DEFAULT_GOAL := run
 
@@ -51,6 +45,7 @@ verify: ##@targets Verifies the etcd CA certificate against the intermediate cer
 .PHONY: verify
 
 regenerate: ##@targets Regenerates the certificate revocation list.
+	mkdir -p crl
 	$(PRINT_ROOT_KEY_PASS)
 	$(OPENSSL) ca $(OPENSSL_ARGS) -gencrl -out $(CRL_FILE)
 .PHONY: regenerate
@@ -59,7 +54,7 @@ show-crl: ##@targets Shows the certificate revocation list.
 	$(OPENSSL) crl -in $(CRL_FILE) -noout -text
 .PHONY: show-crl
 
-server: ##@targets Creates a new server certificate. Needed arguments SERVER_NAME.
+server: ##@targets Creates a new server certificate. Needed arguments SERVER_NAME. Optional arguments are ETCD_SAN. Example: "make server SERVER_NAME=etcd-0.robobee-test.test ETCD_SAN=IP:127.0.0.1,IP:192.168.56.200,DNS:etcd-0.robobee-test.test"
 	set $(SET_FLAG) \
 	&& ETCD_SAN="$(ETCD_SAN)" \
 	&& if [ -z "$$ETCD_SAN" ]; then $(call printInfo1, "No SANs set in ETCD_SAN"); fi \
@@ -70,13 +65,13 @@ server: ##@targets Creates a new server certificate. Needed arguments SERVER_NAM
 	&& $(SERVER_ARGS) \
 	&& $(call printInfo1, Signing $$SERVER_CSR...) \
 	&& $(PRINT_ROOT_KEY_PASS) \
-	&& $(OPENSSL) ca $(OPENSSL_ARGS) -create_serial -extensions etcd_server -days $(SERVER_DAYS) -notext -md sha256 -in $$SERVER_CSR -out $$SERVER_CERT
+	&& $(OPENSSL) ca $(OPENSSL_ARGS) -create_serial -extensions etcd_server -days $(SERVER_CERT_DAYS) -notext -md sha256 -in $$SERVER_CSR -out $$SERVER_CERT
 .PHONY: server
 
 server-verify: _verify_server ##@targets Verifies the etcd server certificate against the CA certificate.
 .PHONY: server-verify
 
-client: ##@targets Creates a new client certificate, needed argument CLIENT_NAME.
+client: ##@targets Creates a new client certificate, needed argument CLIENT_NAME. Example: "make client CLIENT_NAME=kube-0"
 	$(call check_defined, CLIENT_NAME, The client name for the request)
 	set $(SET_FLAG) \
 	&& CLIENT_KEY=private/$(CLIENT_NAME)_key.pem \
@@ -141,7 +136,7 @@ $(CA_CERT):
 	&& cd ../intermediate \
 	&& ROOT_KEY_PASS="passwords/intermediate_key.pem.txt" \
 	&& $(call printInfo2, "$$ROOT_KEY_PASS: `cat $$ROOT_KEY_PASS`") \
-	&& $(OPENSSL) ca $(OPENSSL_ARGS) -create_serial -extensions v3_intermediate_ca -days $(CA_CERT_DAYS) -notext -md sha256 -in ../etcd_ca/$(CA_CSR) -out ../etcd_ca/$(CA_CERT)
+	&& $(OPENSSL) ca $(OPENSSL_ARGS) -create_serial -extensions v3_intermediate_ca -days $(CHILD_CA_CERT_DAYS) -notext -md sha256 -in ../etcd_ca/$(CA_CSR) -out ../etcd_ca/$(CA_CERT)
 
 $(CA_CHAIN):
 	cat $(CA_CERT) ../intermediate/certs/intermediate_cert.pem ../root/certs/ca_cert.pem > $(CA_CHAIN)
