@@ -16,7 +16,7 @@ KEY_CITY               = MUNICH
 KEY_ORG                = ERWIN MUELLER
 KEY_ORGUNIT            = ERWIN MUELLER ECTD-CA
 KEY_COMMON_NAME        = ERWIN MUELLER ECTD-CA
-KEY_EMAIL              = admin@muellerpublic.de
+KEY_EMAIL              = admin@robobee.test
 ETCD_SAN               = "IP:127.0.0.1"
 
 # Set the CRL distribution URL.
