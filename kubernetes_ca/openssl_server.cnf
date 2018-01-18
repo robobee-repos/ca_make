@@ -102,9 +102,9 @@ DNS.1 = kubernetes
 DNS.2 = kubernetes.default
 DNS.3 = kubernetes.default.svc
 DNS.4 = kubernetes.default.svc.cluster.local
-DNS.5 = andrea-master
-DNS.6 = andrea-master.muellerpublic
-DNS.7 = andrea-master.muellerpublic.de
+DNS.5 = node-0
+DNS.6 = node-0.robobee-test
+DNS.7 = node-0.robobee-test.test
 IP.1 = ${K8S_SERVICE_IP}
 IP.2 = ${MASTER_HOST}
 # HA configuration

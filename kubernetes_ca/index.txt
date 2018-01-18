@@ -1,0 +1,1 @@
+V	190118150635Z		D5ACDB63DD679A12	unknown	/CN=kube-apiserver
